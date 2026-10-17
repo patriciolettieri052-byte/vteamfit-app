@@ -99,14 +99,14 @@ const workoutRows = parseCsv(workoutsCsvPath);
 console.log(`Loaded ${workoutRows.length} workout days.`);
 
 let sql = `-- ==============================================================================
--- VTeamFit 2026-2027: Seed Script for Plan Pádel & Master Exercises
+-- VTeamFit 2026-2027: Seed Script for Plan Pádel & Master Exercises (Schema: v2)
 -- Generado automáticamente desde datos normalizados
 -- ==============================================================================
 
 BEGIN;
 
 -- 1. Insert Plan Pádel
-INSERT INTO public.plans (
+INSERT INTO v2.plans (
     id,
     name,
     slug,
@@ -147,7 +147,7 @@ exerciseRows.forEach(ex => {
   const origFile = escapeSql(ex.ARCHIVO_FISICO_ORIGEN ? ex.ARCHIVO_FISICO_ORIGEN.replace(/\\/g, '/') : '');
   const alt = escapeSql(ex.OTROS_ACEPTABLES);
 
-  sql += `INSERT INTO public.exercises (id, name, category, video_code, video_path, original_physical_file, other_acceptable_codes)
+  sql += `INSERT INTO v2.exercises (id, name, category, video_code, video_path, original_physical_file, other_acceptable_codes)
 VALUES (${escapeSql(exId)}, ${exName}, ${cat}, ${vidCode}, ${vidPath}, ${origFile}, ${alt})
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
@@ -174,7 +174,7 @@ workoutRows.forEach(w => {
 
   const jsonExercises = escapeSql(JSON.stringify(dayExercises));
 
-  sql += `INSERT INTO public.plan_workouts (plan_id, week_number, day_number, day_name, focus, warmup_instructions, is_rest_day, exercises)
+  sql += `INSERT INTO v2.plan_workouts (plan_id, week_number, day_number, day_name, focus, warmup_instructions, is_rest_day, exercises)
 VALUES ('plan_padel', ${weekNum}, ${dayNum}, ${escapeSql(dayName)}, ${focus}, ${warmup}, false, ${jsonExercises}::jsonb)
 ON CONFLICT (plan_id, week_number, day_name) DO UPDATE SET
     day_number = EXCLUDED.day_number,
