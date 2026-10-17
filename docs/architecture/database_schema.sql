@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS public.exercises (
     name TEXT NOT NULL,                              -- 'HOMBROS-PRESS SENTADO CON MANCUERNAS'
     category TEXT NOT NULL,                          -- ej: 'HOMBROS', 'PISTA', 'GLUTEOS', etc.
     video_code TEXT,                                 -- ej: 'D1/N38', 'PLAN_PADEL-TGYO/N1'
-    video_path TEXT NOT NULL,                        -- ej: '/plan_padel/hombros-press-sentado-con-mancuernas_d1_n38.mp4'
+    video_path TEXT NOT NULL,                        -- ej: '/hombros-press-sentado-con-mancuernas_d1_n38.mp4'
     original_physical_file TEXT,                     -- ej: 'Videos dia 1/C0038.MP4'
     other_acceptable_codes TEXT,                     -- alternativas aceptables ej: '39.0'
     is_home_friendly BOOLEAN NOT NULL DEFAULT false,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS public.plan_workouts (
     --     "category": "PISTA",
     --     "name": "PISTA-DEFENSA LATERAL AMBOS LADOS 2",
     --     "video_code": "PLAN_PADEL-TGYO/N1",
-    --     "video_path": "/plan_padel/pista-defensa-lateral-ambos-lados-2_plan_padel-tgyo_n1.mov",
+    --     "video_path": "/pista-defensa-lateral-ambos-lados-2_plan_padel-tgyo_n1.mov",
     --     "series": null,
     --     "reps": null,
     --     "rpe": null,
