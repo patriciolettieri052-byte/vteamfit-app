@@ -1,68 +1,175 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/lib/store";
 import { ArrowLeft, CheckCircle2, ChevronRight } from "lucide-react";
+
+interface DayWorkoutSummary {
+  dayNumber: number;
+  dayName: string;
+  title: string;
+  intensity: string;
+  intensityColor: string;
+  exerciseCount: number;
+  isRest: boolean;
+}
+
+const DEFAULT_DAYS: DayWorkoutSummary[] = [
+  {
+    dayNumber: 1,
+    dayName: "Lunes",
+    title: "PREVENIR + VELOCIDAD",
+    intensity: "FUERTE",
+    intensityColor: "bg-red-500/20 text-red-400 border-red-500/30",
+    exerciseCount: 6,
+    isRest: false,
+  },
+  {
+    dayNumber: 2,
+    dayName: "Martes",
+    title: "PREVENIR + FORTALECER",
+    intensity: "MEDIO",
+    intensityColor: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    exerciseCount: 6,
+    isRest: false,
+  },
+  {
+    dayNumber: 3,
+    dayName: "Miércoles",
+    title: "FUERZA + VELOCIDAD ESPECÍFICA",
+    intensity: "FUERTE",
+    intensityColor: "bg-red-500/20 text-red-400 border-red-500/30",
+    exerciseCount: 6,
+    isRest: false,
+  },
+  {
+    dayNumber: 4,
+    dayName: "Jueves",
+    title: "RECUPERACIÓN + PREVENCIÓN",
+    intensity: "SUAVE",
+    intensityColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+    exerciseCount: 5,
+    isRest: false,
+  },
+  {
+    dayNumber: 5,
+    dayName: "Viernes",
+    title: "POTENCIA DE GOLPEO Y PISTA",
+    intensity: "FUERTE",
+    intensityColor: "bg-red-500/20 text-red-400 border-red-500/30",
+    exerciseCount: 6,
+    isRest: false,
+  },
+  {
+    dayNumber: 6,
+    dayName: "Sábado",
+    title: "PREVENIR + CARDIO",
+    intensity: "MEDIO",
+    intensityColor: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    exerciseCount: 4,
+    isRest: false,
+  },
+  {
+    dayNumber: 7,
+    dayName: "Domingo",
+    title: "DESCANSO TOTAL Y REGENERACIÓN",
+    intensity: "DESCANSO",
+    intensityColor: "bg-copper-primary/20 text-copper-primary border-copper-border",
+    exerciseCount: 0,
+    isRest: true,
+  },
+];
 
 export default function SemanaPage() {
   const params = useParams();
   const weekNum = parseInt((params?.week as string) || "1", 10);
-  const { completedDays } = useAppStore();
+  const { completedDays, profile } = useAppStore();
+  const [days, setDays] = useState<DayWorkoutSummary[]>(DEFAULT_DAYS);
 
-  const daysData = [
-    {
-      dayNumber: 1,
-      dayName: "Lunes",
-      title: "Tren Inferior y Cadena Posterior",
-      intensity: "FUERTE",
-      intensityColor: "bg-red-500/20 text-red-400 border-red-500/30",
-    },
-    {
-      dayNumber: 2,
-      dayName: "Martes",
-      title: "Pectoral, Hombro y Potencia",
-      intensity: "MEDIO",
-      intensityColor: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-    },
-    {
-      dayNumber: 3,
-      dayName: "Miércoles",
-      title: "Core, Estabilidad y Prevención",
-      intensity: "SUAVE",
-      intensityColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-    },
-    {
-      dayNumber: 4,
-      dayName: "Jueves",
-      title: "Fuerza Específica y Explosividad",
-      intensity: "FUERTE",
-      intensityColor: "bg-red-500/20 text-red-400 border-red-500/30",
-    },
-    {
-      dayNumber: 5,
-      dayName: "Viernes",
-      title: "Full Body y Resistencia Anaeróbica",
-      intensity: "MEDIO",
-      intensityColor: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-    },
-    {
-      dayNumber: 6,
-      dayName: "Sábado",
-      title: "Recuperación Activa y Movilidad",
-      intensity: "SUAVE",
-      intensityColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-    },
-    {
-      dayNumber: 7,
-      dayName: "Domingo",
-      title: "Día de Regeneración y Descanso Total",
-      intensity: "DESCANSO",
-      intensityColor: "bg-copper-primary/20 text-copper-primary border-copper-border",
-      isRest: true,
-    },
-  ];
+  useEffect(() => {
+    async function loadWeekDays() {
+      try {
+        const planId = profile.activePlanId?.replace(/-/g, "_") || "plan_padel";
+        const { data } = await supabase
+          .from("plan_workouts")
+          .select("day_number, day_name, focus, is_rest_day, exercises")
+          .eq("plan_id", planId)
+          .eq("week_number", weekNum)
+          .order("day_number", { ascending: true });
+
+        if (data && data.length > 0) {
+          const dayNameMap: Record<number, string> = {
+            1: "Lunes",
+            2: "Martes",
+            3: "Miércoles",
+            4: "Jueves",
+            5: "Viernes",
+            6: "Sábado",
+            7: "Domingo",
+          };
+
+          const mappedDays: DayWorkoutSummary[] = (data as Array<{
+            day_number: number;
+            day_name: string;
+            focus: string;
+            is_rest_day: boolean;
+            exercises: unknown[];
+          }>).map((d) => {
+            const isRest = d.is_rest_day || d.day_number === 7;
+            const focus = d.focus || "ENTRENAMIENTO";
+            let intensity = "MEDIO";
+            let intensityColor = "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+
+            if (isRest) {
+              intensity = "DESCANSO";
+              intensityColor = "bg-copper-primary/20 text-copper-primary border-copper-border";
+            } else if (focus.includes("VELOCIDAD") || focus.includes("FUERZA") || focus.includes("POTENCIA")) {
+              intensity = "FUERTE";
+              intensityColor = "bg-red-500/20 text-red-400 border-red-500/30";
+            } else if (focus.includes("CARDIO") || focus.includes("RECUPERACION") || focus.includes("SUAVE")) {
+              intensity = "SUAVE";
+              intensityColor = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+            }
+
+            const exCount = Array.isArray(d.exercises) ? d.exercises.length : 0;
+
+            return {
+              dayNumber: d.day_number,
+              dayName: dayNameMap[d.day_number] || d.day_name,
+              title: focus,
+              intensity,
+              intensityColor,
+              exerciseCount: exCount,
+              isRest,
+            };
+          });
+
+          // Ensure Sunday (Rest) is present if not in database
+          if (!mappedDays.find((d) => d.dayNumber === 7)) {
+            mappedDays.push({
+              dayNumber: 7,
+              dayName: "Domingo",
+              title: "DESCANSO TOTAL Y REGENERACIÓN",
+              intensity: "DESCANSO",
+              intensityColor: "bg-copper-primary/20 text-copper-primary border-copper-border",
+              exerciseCount: 0,
+              isRest: true,
+            });
+          }
+
+          setDays(mappedDays);
+        }
+      } catch (e) {
+        console.warn("Could not fetch live week workouts from Supabase:", e);
+      }
+    }
+
+    loadWeekDays();
+  }, [weekNum, profile.activePlanId]);
 
   return (
     <div className="min-h-screen bg-carbon text-ink-pure pb-32">
@@ -103,7 +210,7 @@ export default function SemanaPage() {
 
       {/* Days List Container */}
       <div className="max-w-4xl mx-auto px-6 mt-8 space-y-4">
-        {daysData.map((day) => {
+        {days.map((day) => {
           const isDone = completedDays[`w${weekNum}_d${day.dayNumber}`];
 
           return (
@@ -160,6 +267,11 @@ export default function SemanaPage() {
                   <h3 className="text-sm sm:text-base font-bold text-ink-dim group-hover:text-ink-heading transition-colors">
                     {day.title}
                   </h3>
+                  {!day.isRest && day.exerciseCount > 0 && (
+                    <span className="text-[11px] text-copper-primary font-semibold block mt-0.5">
+                      {day.exerciseCount} ejercicios estructurados
+                    </span>
+                  )}
                 </div>
               </div>
 

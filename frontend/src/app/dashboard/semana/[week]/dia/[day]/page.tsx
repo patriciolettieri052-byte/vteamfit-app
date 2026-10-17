@@ -6,84 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/lib/store";
 import { ExerciseCard, ExerciseItem } from "@/components/workout/ExerciseCard";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
-
-const FALLBACK_EXERCISES: Record<number, ExerciseItem[]> = {
-  1: [
-    {
-      id: "abductores-abductores-en-suelo",
-      name: "Abductores en Suelo",
-      category: "PIERNAS",
-      series: 4,
-      reps: "15 por pierna",
-      rpe: 8,
-      notes: "Mantené la cadera alineada y la contracción en el punto más alto por 1 segundo.",
-      video_path: "abductores-abductores-en-suelo.mp4",
-    },
-    {
-      id: "femoral-femoral-tumbado-con-mancuerna",
-      name: "Femoral Tumbado con Mancuerna",
-      category: "PIERNAS",
-      series: 3,
-      reps: "12",
-      rpe: 8,
-      notes: "Sujetá la mancuerna firmemente con los pies, bajá lento en 3 segundos.",
-      video_path: "femoral-femoral-tumbado-con-mancuerna.mp4",
-    },
-    {
-      id: "gemelos-gemelos-unilateral-en-step-con-mancuerna",
-      name: "Gemelos Unilateral en Step",
-      category: "PIERNAS",
-      series: 4,
-      reps: "15 por pierna",
-      rpe: 7,
-      notes: "Máximo rango de estiramiento abajo antes de subir explosivo.",
-      video_path: "gemelos-gemelos-unilateral-en-step-con-mancuerna.mp4",
-    },
-    {
-      id: "core-plancha-abdominal",
-      name: "Plancha Abdominal Frontal",
-      category: "CORE",
-      series: 3,
-      reps: "45 seg",
-      rpe: 8,
-      notes: "Glúteos apretados y ombligo hacia la columna vertebral.",
-      video_path: "core-plancha-frontal.mp4",
-    },
-  ],
-  2: [
-    {
-      id: "pecho-press-plano-con-mancuernas",
-      name: "Press Plano con Mancuernas",
-      category: "PECTORAL",
-      series: 4,
-      reps: "10-12",
-      rpe: 8,
-      notes: "Retracción escapular activa en todo el recorrido. No choques las mancuernas.",
-      video_path: "pecho-press-plano-con-mancuernas.mp4",
-    },
-    {
-      id: "hombro-press-militar-con-mancuernas",
-      name: "Press Militar con Mancuernas",
-      category: "HOMBROS",
-      series: 3,
-      reps: "10",
-      rpe: 8,
-      notes: "Codos a 45 grados, empujá hacia el techo sin arquear la espalda baja.",
-      video_path: "hombro-press-militar-con-mancuernas.mp4",
-    },
-    {
-      id: "biceps-curl-martillo-con-mancuernas",
-      name: "Curl Martillo con Mancuernas",
-      category: "BRAZOS",
-      series: 3,
-      reps: "12",
-      rpe: 7,
-      notes: "Codos pegados al cuerpo, controlá la bajada.",
-      video_path: "biceps-curl-martillo-con-mancuernas.mp4",
-    },
-  ],
-};
+import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
 
 export default function DiaPage() {
   const params = useParams();
@@ -91,9 +14,10 @@ export default function DiaPage() {
   const weekNum = parseInt((params?.week as string) || "1", 10);
   const dayNum = parseInt((params?.day as string) || "1", 10);
 
-  const { exerciseLogs, markDayCompleted } = useAppStore();
+  const { exerciseLogs, markDayCompleted, profile } = useAppStore();
   const [exercises, setExercises] = useState<ExerciseItem[]>([]);
-  const [title, setTitle] = useState(`Día ${dayNum}`);
+  const [focus, setFocus] = useState<string>("ENTRENAMIENTO");
+  const [warmup, setWarmup] = useState<string>("");
 
   const dayNames = [
     "Lunes",
@@ -109,32 +33,68 @@ export default function DiaPage() {
   useEffect(() => {
     async function loadRoutine() {
       try {
-        // Query Supabase v2.plan_workouts table
+        const planId = profile.activePlanId?.replace(/-/g, "_") || "plan_padel";
+
+        // Query Supabase v2.plan_workouts table live
         const { data } = await supabase
           .from("plan_workouts")
           .select("*")
-          .eq("plan_id", "plan_padel")
+          .eq("plan_id", planId)
           .eq("week_number", weekNum)
           .eq("day_number", dayNum)
           .maybeSingle();
 
         if (data && data.exercises && Array.isArray(data.exercises)) {
-          setTitle(data.title || `${dayName}`);
-          setExercises(data.exercises);
-        } else {
-          // Fallback routine
-          const fallback =
-            FALLBACK_EXERCISES[dayNum] || FALLBACK_EXERCISES[1];
-          setExercises(fallback);
+          setFocus(data.focus || "ENTRENAMIENTO");
+          setWarmup(data.warmup_instructions || "");
+
+          const mapped: ExerciseItem[] = (
+            data.exercises as Array<{
+              name?: string;
+              category?: string;
+              series?: number | string;
+              reps?: string;
+              rpe?: number;
+              notes?: string;
+              video_path?: string;
+              video_code?: string;
+            }>
+          ).map((ex, idx) => {
+              // Ensure clean unique ID derived from video_path or name
+              let cleanId = "";
+              if (ex.video_path) {
+                cleanId = ex.video_path
+                  .replace(/^\//, "")
+                  .replace(/\.mp4$/i, "")
+                  .replace(/\.mov$/i, "");
+              } else {
+                cleanId = (ex.name || `ex_${idx}`)
+                  .toLowerCase()
+                  .replace(/[^a-z0-9_-]+/g, "-");
+              }
+
+              return {
+                id: cleanId,
+                name: ex.name || "EJERCICIO",
+                category: ex.category || "GENERAL",
+                series: ex.series || 4,
+                reps: ex.reps || "12",
+                rpe: ex.rpe || 8,
+                notes: ex.notes || "",
+                video_path: ex.video_path || `${cleanId}.mp4`,
+              };
+            }
+          );
+
+          setExercises(mapped);
         }
       } catch (err) {
-        console.warn("Using fallback routine:", err);
-        setExercises(FALLBACK_EXERCISES[dayNum] || FALLBACK_EXERCISES[1]);
+        console.warn("Could not load routine from Supabase:", err);
       }
     }
 
     loadRoutine();
-  }, [weekNum, dayNum, dayName]);
+  }, [weekNum, dayNum, profile.activePlanId]);
 
   const handleCompleteDay = () => {
     markDayCompleted(weekNum, dayNum);
@@ -162,12 +122,18 @@ export default function DiaPage() {
         {/* Day Header Banner */}
         <div className="glass-card rounded-[2rem] p-6 sm:p-8 mb-8 border border-white/10">
           <span className="text-[10px] font-black tracking-widest uppercase text-copper-vibrant">
-            JORNADA DE ENTRENAMIENTO
+            JORNADA DE ENTRENAMIENTO • {dayName.toUpperCase()}
           </span>
           <h1 className="text-2xl sm:text-4xl font-black italic uppercase tracking-tight text-white mt-1">
-            {dayName} • {title}
+            {focus}
           </h1>
-          <p className="text-xs sm:text-sm text-ink-dim mt-2">
+          {warmup && (
+            <div className="inline-flex items-center gap-2 mt-3 px-3.5 py-1.5 rounded-full bg-copper-primary/10 border border-copper-border text-copper-hover text-xs font-bold uppercase tracking-wider">
+              <Sparkles size={14} />
+              <span>{warmup}</span>
+            </div>
+          )}
+          <p className="text-xs sm:text-sm text-ink-dim mt-3">
             Realizá cada ejercicio siguiendo la técnica demostrada en video y registrá tus marcas.
           </p>
         </div>
@@ -202,7 +168,7 @@ export default function DiaPage() {
               ESTADO DEL DÍA
             </span>
             <span className="text-xs sm:text-sm font-bold text-white">
-              {dayName} • Semana {weekNum}
+              {dayName} • {focus}
             </span>
           </div>
 

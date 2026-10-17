@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/lib/store";
 import { VideoPlayer } from "@/components/workout/VideoPlayer";
 import { SessionTimer } from "@/components/workout/SessionTimer";
@@ -11,19 +13,96 @@ import { ArrowLeft, Target, Lightbulb } from "lucide-react";
 export default function EjercicioPage() {
   const params = useParams();
   const router = useRouter();
-  const weekNum = params?.week as string;
-  const dayNum = params?.day as string;
-  const rawSlug = (params?.slug as string) || "abductores-abductores-en-suelo";
+  const weekNum = parseInt((params?.week as string) || "1", 10);
+  const dayNum = parseInt((params?.day as string) || "1", 10);
+  const rawSlug = (params?.slug as string) || "";
 
-  const { exerciseLogs, logExercise } = useAppStore();
+  const { exerciseLogs, logExercise, profile } = useAppStore();
 
-  // Format clean name from slug
-  const formattedName = rawSlug
-    .replace(/-/g, " ")
-    .replace(/^([a-z]+)\s+/, "") // remove category prefix if duplicated
-    .toUpperCase();
+  const [exerciseName, setExerciseName] = useState("");
+  const [category, setCategory] = useState("ENTRENAMIENTO");
+  const [videoFilename, setVideoFilename] = useState(`${rawSlug}.mp4`);
+  const [seriesTarget, setSeriesTarget] = useState(4);
+  const [repsTarget, setRepsTarget] = useState("12");
+  const [coachNotes, setCoachNotes] = useState(
+    "Priorizá la técnica y el control de la fase excéntrica antes de subir de carga."
+  );
 
-  const videoFilename = `${rawSlug}.mp4`;
+  useEffect(() => {
+    async function loadExerciseData() {
+      try {
+        const planId = profile.activePlanId?.replace(/-/g, "_") || "plan_padel";
+
+        // 1. Fetch from plan_workouts routine
+        const { data: workout } = await supabase
+          .from("plan_workouts")
+          .select("exercises")
+          .eq("plan_id", planId)
+          .eq("week_number", weekNum)
+          .eq("day_number", dayNum)
+          .maybeSingle();
+
+        if (workout && Array.isArray(workout.exercises)) {
+          const matched = (
+            workout.exercises as Array<{
+              name: string;
+              category?: string;
+              video_path?: string;
+              series?: number | string;
+              reps?: string;
+              notes?: string;
+            }>
+          ).find((ex) => {
+            const exSlug = ex.video_path
+              ? ex.video_path.replace(/^\//, "").replace(/\.mp4$/i, "")
+              : (ex.name || "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+            return exSlug === rawSlug || ex.name === rawSlug;
+          });
+
+          if (matched) {
+            setExerciseName(matched.name);
+            setCategory(matched.category || "ENTRENAMIENTO");
+            if (matched.video_path) {
+              setVideoFilename(matched.video_path.replace(/^\//, ""));
+            }
+            if (matched.series) setSeriesTarget(parseInt(matched.series.toString(), 10) || 4);
+            if (matched.reps) setRepsTarget(matched.reps);
+            if (matched.notes) setCoachNotes(matched.notes);
+            return;
+          }
+        }
+
+        // 2. Fallback query directly in v2.exercises
+        const { data: exDb } = await supabase
+          .from("exercises")
+          .select("*")
+          .or(`video_path.ilike.%${rawSlug}%,id.eq.${rawSlug}`)
+          .maybeSingle();
+
+        if (exDb) {
+          setExerciseName(exDb.name);
+          setCategory(exDb.category || "ENTRENAMIENTO");
+          if (exDb.video_path) setVideoFilename(exDb.video_path.replace(/^\//, ""));
+          if (exDb.instructions) setCoachNotes(exDb.instructions);
+        } else {
+          // Clean slug fallback
+          setExerciseName(
+            rawSlug
+              .replace(/-/g, " ")
+              .replace(/^([a-z]+)\s+/, "")
+              .toUpperCase()
+          );
+        }
+      } catch (e) {
+        console.warn("Could not fetch exercise details from Supabase:", e);
+      }
+    }
+
+    if (rawSlug) {
+      loadExerciseData();
+    }
+  }, [rawSlug, weekNum, dayNum, profile.activePlanId]);
+
   const existingLog = exerciseLogs[rawSlug];
 
   const handleSave = (sets: number, reps: number, weightKg: number) => {
@@ -61,15 +140,15 @@ export default function EjercicioPage() {
         {/* Exercise Title */}
         <div>
           <span className="text-[10px] font-black tracking-widest uppercase text-copper-vibrant">
-            EJECUCIÓN TÉCNICA
+            {category} • EJECUCIÓN TÉCNICA
           </span>
           <h1 className="text-2xl sm:text-4xl font-black italic uppercase tracking-tight text-white mt-1">
-            {formattedName}
+            {exerciseName || rawSlug.toUpperCase()}
           </h1>
         </div>
 
-        {/* Video Player HD */}
-        <VideoPlayer videoPath={videoFilename} title={formattedName} />
+        {/* Video Player HD streaming from Bunny CDN */}
+        <VideoPlayer videoPath={videoFilename} title={exerciseName} />
 
         {/* Session Stopwatch */}
         <SessionTimer />
@@ -86,14 +165,18 @@ export default function EjercicioPage() {
             </div>
             <div className="flex items-baseline gap-4">
               <div>
-                <span className="text-3xl font-black italic text-white">4</span>
+                <span className="text-3xl font-black italic text-white">
+                  {seriesTarget}
+                </span>
                 <span className="text-[10px] text-ink-muted uppercase font-bold ml-1.5">
                   SERIES
                 </span>
               </div>
               <div className="text-xl font-bold text-ink-muted">×</div>
               <div>
-                <span className="text-3xl font-black italic text-white">12</span>
+                <span className="text-3xl font-black italic text-white">
+                  {repsTarget}
+                </span>
                 <span className="text-[10px] text-ink-muted uppercase font-bold ml-1.5">
                   REPS
                 </span>
@@ -106,19 +189,19 @@ export default function EjercicioPage() {
             <div className="flex items-center gap-2 text-copper-vibrant mb-2">
               <Lightbulb size={18} />
               <span className="text-[10px] font-black uppercase tracking-widest">
-                RECOMENDACIÓN DEL MES
+                RECOMENDACIÓN TÉCNICA
               </span>
             </div>
             <p className="text-xs text-ink-dim leading-relaxed">
-              Priorizá la técnica y el control de la fase excéntrica antes de subir de carga.
+              {coachNotes}
             </p>
           </div>
         </div>
 
         {/* Form to log performance */}
         <ExerciseForm
-          initialSets={existingLog?.sets || 4}
-          initialReps={existingLog?.reps || 12}
+          initialSets={existingLog?.sets || seriesTarget}
+          initialReps={existingLog?.reps || repsTarget}
           initialWeight={existingLog?.weightKg || 0}
           onSave={handleSave}
         />
