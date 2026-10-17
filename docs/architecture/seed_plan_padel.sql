@@ -8,32 +8,56 @@ BEGIN;
 -- Asegurar que video_path sea nullable (para ejercicios de estiramientos o cardio libre sin video)
 ALTER TABLE v2.exercises ALTER COLUMN video_path DROP NOT NULL;
 
--- 1. Insert Plan Pádel
+-- 1. Insert 5 Official VTeamFit Plans
 INSERT INTO v2.plans (
-    id,
-    name,
-    slug,
-    description,
-    tagline,
-    total_weeks,
-    days_per_week,
-    cover_image_url,
-    is_published
-) VALUES (
+    id, name, slug, description, tagline, total_weeks, days_per_week, cover_image_url, is_published
+) VALUES
+(
     'plan_padel',
     'Plan Pádel',
     'plan-padel',
     'Preparación física de alto rendimiento para pádel diseñada por Victoria Torres y Tito Allemandi (24 semanas de progresión específica para potencia, agilidad y prevención de lesiones).',
     'Entrena como un profesional del World Padel Tour',
-    24,
-    6,
-    '/fotos/fisico-pista-padel.jpg',
-    true
-) ON CONFLICT (id) DO UPDATE SET
+    24, 6, '/fotos/plan-padel.jpg', true
+),
+(
+    'transforma_tu_cuerpo',
+    'Transforma tu Cuerpo',
+    'transforma-tu-cuerpo',
+    'Plan de 196 días para transformar tu cuerpo con entrenamiento de fuerza e hipertrofia. El programa más completo de VTeamFit.',
+    'Fuerza, hipertrofia y definición integral',
+    28, 6, '/fotos/transforma-tu-cuerpo.jpg', true
+),
+(
+    'gluteos_de_acero',
+    'Glúteos de Acero',
+    'gluteos-de-acero',
+    'Plan de 84 días enfocado en glúteos y tren inferior. Transforma tu cuerpo con entrenamientos progresivos diseñados para moldear y fortalecer los glúteos.',
+    'Enfoque biomecánico en glúteos y tren inferior',
+    12, 5, '/fotos/gluteos.jpg', true
+),
+(
+    'entrena_conmigo',
+    'Entrena Conmigo',
+    'entrena-conmigo',
+    'Acompañamiento 100% individualizado con Victoria Torres. Rutinas personalizadas, corrección técnica por video y feedback continuo.',
+    'Coaching 1 a 1 de alto rendimiento',
+    4, 5, '/fotos/entrena-conmigo2.webp', true
+),
+(
+    'fisico_en_pista_padel',
+    'Curso de Físico en Pista de Pádel',
+    'fisico-en-pista-padel',
+    'Curso metodológico intensivo para preparación física en pista. Aprende a diseñar ejercicios específicos de desplazamiento, aceleración y frenada.',
+    'Metodología profesional de pádel en pista',
+    12, 4, '/fotos/fisico-padel.webp', true
+)
+ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     description = EXCLUDED.description,
     tagline = EXCLUDED.tagline,
     total_weeks = EXCLUDED.total_weeks,
+    days_per_week = EXCLUDED.days_per_week,
     cover_image_url = EXCLUDED.cover_image_url,
     updated_at = now();
 
