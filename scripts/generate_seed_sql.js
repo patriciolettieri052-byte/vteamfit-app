@@ -63,7 +63,7 @@ console.log(`Loaded ${exerciseRows.length} master exercises.`);
 // Check slug uniqueness
 const seenSlugs = new Set();
 exerciseRows.forEach(ex => {
-  const s = ex.NOMBRE_BUNNY_HIBRIDO.replace(/\.[^.]+$/, '');
+  const s = ex.NOMBRE_BUNNY_HIBRIDO ? ex.NOMBRE_BUNNY_HIBRIDO.replace(/\.[^.]+$/, '') : slugify(ex.EJERCICIO);
   if (seenSlugs.has(s)) {
     console.warn(`[WARNING] Duplicate ID detected: ${s} for ${ex.EJERCICIO}`);
   }
@@ -105,6 +105,9 @@ let sql = `-- ==================================================================
 
 BEGIN;
 
+-- Asegurar que video_path sea nullable (para ejercicios de estiramientos o cardio libre sin video)
+ALTER TABLE v2.exercises ALTER COLUMN video_path DROP NOT NULL;
+
 -- 1. Insert Plan Pádel
 INSERT INTO v2.plans (
     id,
@@ -139,7 +142,7 @@ INSERT INTO v2.plans (
 
 // Build exercise inserts
 exerciseRows.forEach(ex => {
-  const exId = ex.NOMBRE_BUNNY_HIBRIDO.replace(/\.[^.]+$/, '');
+  const exId = ex.NOMBRE_BUNNY_HIBRIDO ? ex.NOMBRE_BUNNY_HIBRIDO.replace(/\.[^.]+$/, '') : slugify(ex.EJERCICIO);
   const exName = escapeSql(ex.EJERCICIO);
   const cat = escapeSql(ex.CATEGORIA);
   const vidCode = escapeSql(ex.ARCHIVO_VIDEO);

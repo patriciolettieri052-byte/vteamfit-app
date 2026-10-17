@@ -5,6 +5,9 @@
 
 BEGIN;
 
+-- Asegurar que video_path sea nullable (para ejercicios de estiramientos o cardio libre sin video)
+ALTER TABLE v2.exercises ALTER COLUMN video_path DROP NOT NULL;
+
 -- 1. Insert Plan Pádel
 INSERT INTO v2.plans (
     id,
@@ -2236,7 +2239,7 @@ ON CONFLICT (id) DO UPDATE SET
     other_acceptable_codes = EXCLUDED.other_acceptable_codes,
     updated_at = now();
 INSERT INTO v2.exercises (id, name, category, video_code, video_path, original_physical_file, other_acceptable_codes)
-VALUES (NULL, 'ESTIRAMIENTOS-CIRCITO POR TELEGRAM', 'ESTIRAMIENTOS', NULL, NULL, NULL, NULL)
+VALUES ('estiramientos-circito-por-telegram', 'ESTIRAMIENTOS-CIRCITO POR TELEGRAM', 'ESTIRAMIENTOS', NULL, NULL, NULL, NULL)
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     category = EXCLUDED.category,

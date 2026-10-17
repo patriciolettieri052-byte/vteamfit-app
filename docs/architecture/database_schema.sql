@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS v2.exercises (
     name TEXT NOT NULL,                              -- 'HOMBROS-PRESS SENTADO CON MANCUERNAS'
     category TEXT NOT NULL,                          -- ej: 'HOMBROS', 'PISTA', 'GLUTEOS', etc.
     video_code TEXT,                                 -- ej: 'D1/N38', 'PLAN_PADEL-TGYO/N1'
-    video_path TEXT NOT NULL,                        -- ej: '/hombros-press-sentado-con-mancuernas_d1_n38.mp4'
+    video_path TEXT,                                 -- ej: '/hombros-press-sentado-con-mancuernas_d1_n38.mp4' (nullable para estiramientos/cardio sin video)
     original_physical_file TEXT,                     -- ej: 'Videos dia 1/C0038.MP4'
     other_acceptable_codes TEXT,                     -- alternativas aceptables ej: '39.0'
     is_home_friendly BOOLEAN NOT NULL DEFAULT false,
