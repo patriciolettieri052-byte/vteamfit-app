@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS v2.plan_workouts (
     --     "category": "PISTA",
     --     "name": "PISTA-DEFENSA LATERAL AMBOS LADOS 2",
     --     "video_code": "PLAN_PADEL-TGYO/N1",
-    --     "video_path": "/pista-defensa-lateral-ambos-lados-2_plan_padel-tgyo_n1.mov",
+    --     "video_path": "/pista-defensa-lateral-ambos-lados-2_plan_padel-tgyo_n1.mp4",
     --     "series": null,
     --     "reps": null,
     --     "rpe": null,
