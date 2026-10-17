@@ -26,18 +26,18 @@ export default function OnboardingPage() {
       const numHeight = parseInt(height, 10) || 168;
       const numAge = parseInt(age, 10) || 27;
 
-      updateProfile({
-        gender,
-        weight: numWeight,
-        height: numHeight,
-        age: numAge,
-      });
-      addWeightRecord(numWeight);
-
-      setTimeout(() => {
+      Promise.all([
+        updateProfile({
+          gender,
+          weight: numWeight,
+          height: numHeight,
+          age: numAge,
+        }),
+        addWeightRecord(numWeight),
+      ]).finally(() => {
         setIsLoading(false);
         router.push("/dashboard");
-      }, 600);
+      });
     }
   };
 

@@ -3,21 +3,45 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
 
 export default function RecuperarPage() {
   const [email, setEmail] = useState("");
   const [isSent, setIsSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setIsLoading(true);
-    setTimeout(() => {
+    setErrorMsg("");
+
+    try {
+      const redirectUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/login`
+          : undefined;
+
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        {
+          redirectTo: redirectUrl,
+        }
+      );
+
       setIsLoading(false);
-      setIsSent(true);
-    }, 600);
+      if (error) {
+        setErrorMsg(error.message);
+      } else {
+        setIsSent(true);
+      }
+    } catch (err: unknown) {
+      setIsLoading(false);
+      const message = err instanceof Error ? err.message : "Error al enviar email de recuperación";
+      setErrorMsg(message);
+    }
   };
 
   return (
@@ -53,6 +77,12 @@ export default function RecuperarPage() {
                 Te enviamos un link a tu email para resetear tu contraseña
               </p>
             </div>
+
+            {errorMsg && (
+              <div className="mb-6 p-3 rounded-xl bg-state-error/10 border border-state-error/30 text-state-error text-xs text-center font-semibold">
+                {errorMsg}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>

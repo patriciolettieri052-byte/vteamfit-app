@@ -21,7 +21,7 @@ export default function PlanDetailPage() {
   const router = useRouter();
   const slug = params?.slug as string;
   const plan = getPlanBySlug(slug) || PLANS_CATALOG[0];
-  const { updateProfile } = useAppStore();
+  const { profile, updateProfile } = useAppStore();
 
   const [showCoupon, setShowCoupon] = useState(false);
   const [couponCode, setCouponCode] = useState("");
@@ -41,19 +41,35 @@ export default function PlanDetailPage() {
     }
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     setIsProcessing(true);
-    // Assign active plan to user profile in store
-    updateProfile({ activePlanId: plan.id });
 
-    setTimeout(() => {
+    if (profile.id) {
+      try {
+        await fetch("/api/enrollments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: profile.id,
+            planId: plan.id,
+          }),
+        });
+        await updateProfile({ activePlanId: plan.id });
+      } catch (e) {
+        console.warn("Could not save enrollment:", e);
+      }
+
       setIsProcessing(false);
       if (plan.id === "entrena-conmigo") {
         router.push("/dashboard/entrena-conmigo/onboarding");
       } else {
-        router.push("/onboarding");
+        router.push("/dashboard");
       }
-    }, 700);
+    } else {
+      // User needs to register or log in first
+      setIsProcessing(false);
+      router.push(`/registro?plan=${plan.id}`);
+    }
   };
 
   const finalPrice =

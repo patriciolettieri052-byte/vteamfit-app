@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAppStore } from "@/lib/store";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
 export default function EntrenaConmigoOnboarding() {
   const router = useRouter();
+  const { profile } = useAppStore();
   const [step, setStep] = useState(1);
   const [goal, setGoal] = useState("Ganar músculo");
   const [frequency, setFrequency] = useState("4 días");
@@ -26,10 +28,22 @@ export default function EntrenaConmigoOnboarding() {
       setStep(step + 1);
     } else {
       setIsSubmitting(true);
-      setTimeout(() => {
+      if (profile.id) {
+        fetch("/api/profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: profile.id,
+            experience_level: "advanced",
+          }),
+        }).finally(() => {
+          setIsSubmitting(false);
+          router.push("/dashboard/entrena-conmigo/espera");
+        });
+      } else {
         setIsSubmitting(false);
         router.push("/dashboard/entrena-conmigo/espera");
-      }, 700);
+      }
     }
   };
 

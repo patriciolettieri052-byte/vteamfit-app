@@ -4,19 +4,18 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAppStore } from "@/lib/store";
+import { supabase } from "@/lib/supabase";
 import { ArrowLeft, Lock, Mail } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { updateProfile } = useAppStore();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setErrorMsg("Email o contraseña incorrectos");
@@ -26,11 +25,26 @@ export default function LoginPage() {
     setIsLoading(true);
     setErrorMsg("");
 
-    setTimeout(() => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      if (error) {
+        setIsLoading(false);
+        setErrorMsg("Email o contraseña incorrectos");
+        return;
+      }
+
+      if (data?.user) {
+        router.push("/dashboard");
+      }
+    } catch (err: unknown) {
       setIsLoading(false);
-      updateProfile({ email, name: email.split("@")[0] });
-      router.push("/dashboard");
-    }, 600);
+      const message = err instanceof Error ? err.message : "Error al iniciar sesión";
+      setErrorMsg(message);
+    }
   };
 
   return (

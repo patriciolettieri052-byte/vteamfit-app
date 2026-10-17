@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useAppStore } from "@/lib/store";
 
 export function TopBar() {
-  const { profile } = useAppStore();
+  const { profile, isAuthenticated } = useAppStore();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-20 px-4 md:px-8 flex items-center justify-between bg-carbon/80 backdrop-blur-md border-b border-white/5 transition-all">
@@ -37,7 +37,7 @@ export function TopBar() {
         </div>
 
         {/* Auth CTA or User Avatar */}
-        {profile?.name ? (
+        {isAuthenticated && profile?.name ? (
           <Link
             href="/dashboard"
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-copper-primary/20 border border-copper-border text-copper-hover hover:border-copper-vibrant text-xs font-bold tracking-widest uppercase transition-all shadow-glow hover:scale-105"

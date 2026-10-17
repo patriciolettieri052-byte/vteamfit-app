@@ -4,12 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAppStore } from "@/lib/store";
+import { supabase } from "@/lib/supabase";
 import { ArrowLeft, User, Mail, Lock } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { updateProfile } = useAppStore();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,7 +16,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || password.length < 6) {
       setErrorMsg("Completa todos los campos (contraseña mínimo 6 caracteres)");
@@ -27,11 +26,45 @@ export default function RegisterPage() {
     setIsLoading(true);
     setErrorMsg("");
 
-    setTimeout(() => {
-      setIsLoading(false);
-      updateProfile({ name, email });
+    try {
+      const planId =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("plan")
+          : null;
+
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+          name: name.trim(),
+          planId: planId || undefined,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setIsLoading(false);
+        setErrorMsg(
+          data.error || "No se pudo crear la cuenta. Intentá de nuevo."
+        );
+        return;
+      }
+
+      // Automatically sign in with Supabase Auth
+      await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
       router.push("/onboarding");
-    }, 600);
+    } catch (err: unknown) {
+      setIsLoading(false);
+      const message = err instanceof Error ? err.message : "Error de conexión. Intentá de nuevo.";
+      setErrorMsg(message);
+    }
   };
 
   return (

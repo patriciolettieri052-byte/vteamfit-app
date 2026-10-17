@@ -14,16 +14,15 @@ import {
   Calendar,
 } from "lucide-react";
 
+import { supabase } from "@/lib/supabase";
+
 export default function PerfilPage() {
   const router = useRouter();
-  const { profile, updateProfile } = useAppStore();
+  const { profile } = useAppStore();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm("¿Quieres cerrar sesión?")) {
-      updateProfile({
-        name: "Atleta VTeam",
-        email: "atleta@vteamfit.app",
-      });
+      await supabase.auth.signOut();
       router.push("/login");
     }
   };

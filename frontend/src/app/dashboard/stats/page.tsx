@@ -16,10 +16,10 @@ export default function StatsPage() {
   // Calculate percentage: total days completed out of 144 days (24 weeks * 6)
   const completedCount = Object.keys(completedDays).length;
   const totalTargetDays = 144;
-  const percentage = Math.max(
-    12,
-    Math.round((completedCount / totalTargetDays) * 100)
-  );
+  const percentage =
+    totalTargetDays > 0
+      ? Math.round((completedCount / totalTargetDays) * 100)
+      : 0;
 
   return (
     <div className="min-h-screen bg-carbon text-ink-pure pb-32 pt-8 px-4 sm:px-6 max-w-4xl mx-auto">
