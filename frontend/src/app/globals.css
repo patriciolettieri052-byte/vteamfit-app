@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ==========================================================================
+     FONDOS Y SUPERFICIES (Base & Elevation) - OKLCH Tokens
+     ========================================================================== */
+  --bg-carbon: oklch(0.12 0.005 240);              /* #050505 - Base obsidiana profunda */
+  --bg-surface: oklch(0.18 0.008 240 / 0.60);       /* Superficie elevada traslúcida */
+  --bg-surface-glass: oklch(0.15 0.008 240 / 0.40); /* Paneles con backdrop-blur-xl */
+  --bg-surface-solid: oklch(0.24 0.008 240);       /* Superficie opaca para inputs */
+  --bg-surface-subtle: oklch(0.20 0.006 240 / 0.50);/* Contenedores secundarios */
+
+  /* ==========================================================================
+     ACENTOS DE MARCA Y ENERGÍA (Copper & Flame)
+     ========================================================================== */
+  --copper-primary: oklch(0.55 0.09 75);           /* #897449 - Cobre metálico base */
+  --copper-vibrant: oklch(0.68 0.20 38);           /* #ff6b4a - Cobre eléctrico / CTA */
+  --copper-hover: oklch(0.72 0.18 42);             /* #ff8566 - Hover de interacción */
+  --copper-glow: oklch(0.68 0.20 38 / 0.40);       /* Halo difuso para sombras */
+  --copper-subtle: oklch(0.55 0.09 75 / 0.10);     /* Fondos de chips y tags */
+  --copper-border: oklch(0.55 0.09 75 / 0.30);     /* Delimitadores de foco y realce */
+
+  /* ==========================================================================
+     TINTAS TIPOGRÁFICAS (Contrast & Typography)
+     ========================================================================== */
+  --ink-pure: oklch(1 0 0);                         /* #FFFFFF - Blanco puro para titulares display */
+  --ink-heading: oklch(0.96 0.005 240);            /* Blanco óptico de alta jerarquía */
+  --ink-body: oklch(0.85 0.01 240);                /* Zinc claro para textos de lectura */
+  --ink-dim: oklch(0.72 0.005 240);                 /* #AAAAAA - Subtítulos, labels y metadatos */
+  --ink-muted: oklch(0.52 0.01 240);               /* Etiquetas técnicas y placeholder */
+
+  /* ==========================================================================
+     ESTADOS FUNCIONALES (Feedback & System)
+     ========================================================================== */
+  --state-success: oklch(0.65 0.19 152);           /* #10b981 - Día completado y rachas */
+  --state-success-glow: oklch(0.65 0.19 152 / 0.30);
+  --state-warning: oklch(0.70 0.19 55);            /* #f97316 - Fuego de racha activa */
+  --state-error: oklch(0.62 0.22 25);              /* #ef4444 - Alertas de validación */
+
+  /* ==========================================================================
+     FILETES Y LÍNEAS ESTRUCTURALES
+     ========================================================================== */
+  --border-hairline: oklch(1 0 0 / 0.05);          /* 1px divisores sutiles */
+  --border-medium: oklch(1 0 0 / 0.10);            /* Contornos de tarjetas */
+  --border-strong: oklch(0.55 0.09 75 / 0.40);     /* Resalte de tarjeta activa */
+
+  --background: var(--bg-carbon);
+  --foreground: var(--ink-pure);
+}
+
+body {
+  color: var(--ink-pure);
+  background-color: var(--bg-carbon);
+  background-image: url('/images/carbon-texture-v4.webp');
+  background-repeat: repeat;
+  background-size: 500px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: var(--bg-surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-hairline);
+}
+
+.glass-card {
+  background: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-medium);
+}
+
+.copper-gradient-text {
+  background: linear-gradient(135deg, #ff8566 0%, #ff6b4a 50%, #897449 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-carbon);
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.3 0.01 240);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--copper-primary);
+}
