@@ -1,0 +1,21 @@
+-- Estado: pendiente
+-- Versión: 0.0
+-- Fuentes: docs/prd.md, docs/inputs/, docs/architecture/decisions.md
+--
+-- Esquema de base de datos: fuente de verdad.
+-- Lo genera el architect-agent en la Fase 2. Solo el Arquitecto humano cambia el estado a "aprobado".
+-- Los workers lo implementan, nunca lo modifican.
+-- Si este archivo supera 24 KB, reemplazar el include de backend/AGENTS.md
+-- por una referencia @docs/architecture/database_schema.sql (lectura bajo demanda).
+--
+-- Convención por tabla:
+--   1. Comentario con la entidad del PRD, los requisitos (RF-xx) y las decisiones (D-xx) que la originan.
+--   2. CREATE TABLE con tipos, NOT NULL, defaults y claves.
+--   3. Índices y políticas RLS de Supabase.
+--
+-- Ejemplo de formato (el agente lo reemplaza):
+-- -- Entidad PRD: <Entidad> | Requisitos: RF-01, RF-02 | Decisiones: D-04
+-- create table <tabla> (
+--   id uuid primary key default gen_random_uuid(),
+--   created_at timestamptz not null default now()
+-- );
